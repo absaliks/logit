@@ -3,17 +3,22 @@ package ru.absaliks.logit.service;
 import static ru.absaliks.logit.view.ViewUtils.showError;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import ru.absaliks.logit.common.OSUtils;
+import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
 import ru.absaliks.logit.model.JournalEntry;
 import ru.absaliks.logit.model.ServicePage;
@@ -33,13 +38,8 @@ public class Service {
   private ObjectProperty<List<ArchiveEntry>> archiveProperty;
   private BooleanProperty journalInProcessProperty = new SimpleBooleanProperty();
   private BooleanProperty archiveInProcessProperty = new SimpleBooleanProperty();
-
-  private Function<Throwable, Void> exceptionHandler = throwable -> {
-    LOG.log(Level.SEVERE, throwable.getMessage(), throwable);
-    showError(throwable.getMessage());
-    journalInProcessProperty.setValue(false);
-    return null;
-  };
+  private DoubleProperty progress = new SimpleDoubleProperty();
+  private Future<?> future;
 
   public Service(ModbusService modbusService) {
     this.modbusService = modbusService;
@@ -68,28 +68,47 @@ public class Service {
     return archiveInProcessProperty;
   }
 
+  public DoubleProperty getProgressProperty() {
+    return progress;
+  }
+
   public void readServicePage() {
     journalInProcessProperty.setValue(true);
-    CompletableFuture
-        .supplyAsync(() -> modbusService.readServicePage(), executor)
-        .thenAccept(servicePage -> updateServicePageProperty(servicePage))
-        .exceptionally(exceptionHandler);
+    future = executor.submit(() -> {
+      try {
+        ServicePage servicePage = modbusService.readServicePage();
+        updateServicePageProperty(servicePage);
+      } catch (Exception e) {
+        handleException(e);
+      }
+      future = null;
+    });
   }
 
   public void readJournal() {
     journalInProcessProperty.setValue(true);
-    CompletableFuture
-        .supplyAsync(() -> modbusService.readJournal(), executor)
-        .thenAccept(journal -> updateJournalProperty(journal))
-        .exceptionally(exceptionHandler);
+    future = executor.submit(() -> {
+      try {
+        List<JournalEntry> journal = modbusService.readJournal(progress);
+        updateJournalProperty(journal);
+      } catch (Exception e) {
+        handleException(e);
+      }
+      future = null;
+    });
   }
 
   public void readArchive() {
     journalInProcessProperty.setValue(true);
-    CompletableFuture
-        .supplyAsync(() -> modbusService.readArchive(), executor)
-        .thenAccept(archive -> updateArchiveProperty(archive))
-        .exceptionally(exceptionHandler);
+    future = executor.submit(() -> {
+      try {
+        List<ArchiveEntry> archive = modbusService.readArchive(progress);
+        updateArchiveProperty(archive);
+      } catch (Exception e) {
+        handleException(e);
+      }
+      future = null;
+    });
   }
 
   private void updateServicePageProperty(ServicePage servicePage) {
@@ -109,10 +128,16 @@ public class Service {
 
   public void saveJournal(File file, List<JournalEntry> journal) {
     journalInProcessProperty.setValue(true);
-    CompletableFuture
-        .supplyAsync(new SaveJournalToCSV(file, journal)::call)
-        .thenAccept((n) -> setJournalInProcessProperty(false))
-        .exceptionally(exceptionHandler);
+    future = executor.submit(() -> {
+      try {
+        new SaveJournalToCSV(file, journal).call();
+        setJournalInProcessProperty(false);
+        openFile(file);
+      } catch (Exception e) {
+        handleException(e);
+      }
+      future = null;
+    });
   }
 
   private void setJournalInProcessProperty(boolean value) {
@@ -121,14 +146,42 @@ public class Service {
 
   public void saveArchive(File file, List<ArchiveEntry> journal) {
     journalInProcessProperty.setValue(true);
-    CompletableFuture
-        .supplyAsync(new SaveArchiveToCSV(file, journal)::call)
-        .thenAccept((n) -> setArchiveInProcessProperty(false))
-        .exceptionally(exceptionHandler);
+    future = executor.submit(() -> {
+      try {
+        new SaveArchiveToCSV(file, journal).call();
+        setArchiveInProcessProperty(false);
+        openFile(file);
+      } catch (Exception e) {
+        handleException(e);
+      }
+      future = null;
+    });
+  }
+
+  public void cancel() {
+    if (future != null) {
+      LOG.info("Cancelling a task");
+      future.cancel(true);
+    }
   }
 
   private void setArchiveInProcessProperty(boolean value) {
     archiveInProcessProperty.setValue(value);
     journalInProcessProperty.setValue(false); // TODO
+  }
+
+  private void openFile(File file) throws IOException {
+    if (Config.getInstance().openFileAfterSaving) {
+      LOG.config("Opening a file " + file.getAbsolutePath());
+      OSUtils.openFile(file);
+    }
+  }
+
+  private void handleException(Throwable throwable) {
+    future = null;
+    LOG.log(Level.SEVERE, throwable.getMessage(), throwable);
+    journalInProcessProperty.setValue(false);
+    progress.setValue(0);
+    Platform.runLater(() -> showError(throwable.getMessage()));
   }
 }

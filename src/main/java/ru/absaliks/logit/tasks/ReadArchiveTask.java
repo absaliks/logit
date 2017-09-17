@@ -2,6 +2,9 @@ package ru.absaliks.logit.tasks;
 
 import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import org.apache.commons.lang3.ArrayUtils;
 import ru.absaliks.logit.common.ByteUtils;
 import ru.absaliks.logit.model.ArchiveEntry;
 
@@ -10,8 +13,8 @@ public class ReadArchiveTask extends ReadPagesTask<ArchiveEntry> {
   public static final int PAGE_REF = 20;
   public static final int PAGE_LENGTH = 4;
 
-  public ReadArchiveTask(AbstractModbusMaster master, int slaveId, int pagesCount) {
-    super(master, slaveId, pagesCount);
+  public ReadArchiveTask(AbstractModbusMaster master, int slaveId, int pagesCount, DoubleProperty progress) {
+    super(master, slaveId, pagesCount, progress);
   }
 
   @Override
@@ -42,6 +45,6 @@ public class ReadArchiveTask extends ReadPagesTask<ArchiveEntry> {
   }
 
   private long getTimestampValue(InputRegister[] registers) {
-    return ByteUtils.getUInt32(registers[2].toBytes(), registers[3].toBytes());
+    return ByteUtils.getUInt32(registers[2].toBytes(), registers[3].toBytes(), config.uint32ByteOrder);
   }
 }

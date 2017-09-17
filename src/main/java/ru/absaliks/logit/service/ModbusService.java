@@ -1,6 +1,7 @@
 package ru.absaliks.logit.service;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.DoubleProperty;
 import ru.absaliks.logit.ModbusMasterBuilder;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
@@ -24,7 +26,6 @@ public class ModbusService {
 
   private static ModbusService instance;
   private ServicePage servicePage;
-  private AbstractModbusMaster modbusMaster;
 
   private ModbusService() {
   }
@@ -36,12 +37,12 @@ public class ModbusService {
     return instance;
   }
 
-  public void checkConnection() {
+  public void checkConnection() throws Exception {
     AbstractModbusMaster master = null;
     try {
       master = getConnection();
     } finally {
-      if (master != null) {
+      if (nonNull(master)) {
         master.disconnect();
       }
     }
@@ -51,62 +52,54 @@ public class ModbusService {
     return servicePage;
   }
 
-  public ServicePage readServicePage() {
+  public ServicePage readServicePage() throws Exception {
+    LOG.info("Reading service page");
+    AbstractModbusMaster master = null;
     try {
-      LOG.log(Level.INFO, "Reading the service page");
-      this.servicePage = new ReadServicePageTask(getConnection(), getSlaveId()).call();
+      master = getConnection();
+      this.servicePage = new ReadServicePageTask(master, getSlaveId()).call();
       return this.servicePage;
-    } catch (ModbusException e) {
-      LOG.log(Level.SEVERE, "Unable to read the service page", e);
-      throw new RuntimeException(e.getMessage(), e);
     } finally {
-      disconnect();
+      disconnect(master);
     }
   }
 
-  private void disconnect() {
+  private void disconnect(AbstractModbusMaster master) {
     LOG.log(Level.INFO, "Closing connection");
-    if (modbusMaster != null)
-      modbusMaster.disconnect();
+    if (master != null)
+      master.disconnect();
   }
 
-  public List<JournalEntry> readJournal() {
+  public List<JournalEntry> readJournal(DoubleProperty progress) throws Exception {
+    LOG.info("Reading journal...");
     checkServicePage();
+    AbstractModbusMaster master = null;
     try {
-      LOG.log(Level.INFO, "Reading the journal");
-      return new ReadJournalTask(getConnection(), getSlaveId(), servicePage.journalPageCount)
+      master = getConnection();
+      return new ReadJournalTask(master, getSlaveId(), servicePage.journalPageCount, progress)
           .call();
-    } catch (ModbusException e) {
-      LOG.log(Level.SEVERE, "Unable to read the journal", e);
-      throw new RuntimeException(e.getMessage(), e);
-    } catch (InterruptedException e) {
-      LOG.log(Level.INFO, "Read journal operation has been interrupted", e);
-      return null;
     } finally {
-      disconnect();
+      disconnect(master);
     }
   }
 
-  private void checkServicePage() {
+  private void checkServicePage() throws Exception {
     if (isNull(servicePage)) {
-      LOG.info("ServicePage is null, going to read ServicePage first");
+      LOG.info("Service page is null, going to read it first");
       readServicePage();
     }
   }
 
-  public List<ArchiveEntry> readArchive() {
+  public List<ArchiveEntry> readArchive(DoubleProperty progress)
+      throws Exception {
     checkServicePage();
+    AbstractModbusMaster master = null;
     try {
-      return new ReadArchiveTask(getConnection(), getSlaveId(), servicePage.archivePageCount)
+      master = getConnection();
+      return new ReadArchiveTask(master, getSlaveId(), servicePage.archivePageCount, progress)
           .call();
-    } catch (ModbusException e) {
-      LOG.log(Level.SEVERE, "Unable to read the archive", e);
-      throw new RuntimeException(e.getMessage(), e);
-    } catch (InterruptedException e) {
-      LOG.log(Level.INFO, "Read archive operation has been interrupted", e);
-      return null;
     } finally {
-      disconnect();
+      disconnect(master);
     }
   }
 
@@ -114,19 +107,10 @@ public class ModbusService {
     return Config.getInstance().modbus.deviceId == 0 ? 1 : Config.getInstance().modbus.deviceId;
   }
 
-  private AbstractModbusMaster getConnection() {
+  private AbstractModbusMaster getConnection() throws Exception {
+    LOG.config("Opening connection");
     AbstractModbusMaster master = ModbusMasterBuilder.createMaster();
-    try {
-      master.connect();
-      modbusMaster = master;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Cannot connect to slave", e);
-      /*
-       - Port %s is not a valid name for a port on this platform
-       - Port [%s] cannot be opened or does not exist - Valid ports are: [%s]
-      */
-      throw new RuntimeException("Не удалось подключиться к устройству: " + e.getMessage());
-    }
+    master.connect();
     return master;
   }
 

@@ -5,10 +5,12 @@ import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
 import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.DoubleProperty;
 import ru.absaliks.logit.config.Config;
 
 public abstract class ReadPagesTask<T> implements Callable<List<T>> {
@@ -21,15 +23,24 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
   private final int slaveId;
   private final int pagesCount;
   private final int delayBetweenRequests;
-
+  private final DoubleProperty progress;
   private final List<T> pages;
+  protected Config config = Config.getInstance();
 
-  public ReadPagesTask(AbstractModbusMaster modbusMaster, int slaveId, int pagesCount) {
+  private final float progressPerPage;
+
+  public ReadPagesTask(AbstractModbusMaster modbusMaster, int slaveId, int pagesCount,
+      DoubleProperty progress) {
+    if (pagesCount == 0)
+      throw new IllegalArgumentException("pagesCount = 0");
+
     this.modbusMaster = modbusMaster;
     this.pagesCount = pagesCount;
     this.slaveId = slaveId;
     this.pages = new ArrayList<>(pagesCount);
+    this.progress = progress;
     this.delayBetweenRequests = Config.getInstance().modbus.delayBetweenRequests;
+    this.progressPerPage = 1f / pagesCount;
 
     LOG.config(this::toString);
   }
@@ -42,6 +53,7 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
       T page = createPage(readPageData());
       pages.add(page);
 
+      progress.setValue(progressPerPage * (pageId + 1));
       if (LOG.isLoggable(Level.CONFIG)) {
         LOG.config(String.format("Page #%d: %s", pageId, page));
       }
@@ -78,14 +90,28 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
     try {
       InputRegister[] registers = modbusMaster.readInputRegisters(slaveId, PAGE_READY_REF, 1);
       return registers[0].getValue() != 0;
-    } catch (Exception e) {
+    } catch (ModbusException e) {
       LOG.log(Level.INFO, "Unable to read page status", e);
       return false;
     }
   }
 
   private InputRegister[] readPageData() throws ModbusException {
-    return modbusMaster.readInputRegisters(slaveId, getPageRef(), getPageLength());
+    InputRegister[] registers = modbusMaster
+        .readInputRegisters(slaveId, getPageRef(), getPageLength());
+    logRegisters(registers);
+    return registers;
+  }
+
+  private void logRegisters(InputRegister[] registers) {
+    if (LOG.isLoggable(Level.CONFIG)) {
+      byte[] bytes = new byte[registers.length * 2];
+      for (int i = 0; i < registers.length; i++)
+      {
+        System.arraycopy(registers[i].toBytes(), 0, bytes, i * 2, 2);
+      }
+      LOG.config("Have read registers: " + Arrays.toString(bytes));
+    }
   }
 
   protected abstract int getCurrentPageRef();

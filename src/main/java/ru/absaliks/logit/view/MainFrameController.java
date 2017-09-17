@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -21,7 +22,7 @@ import ru.absaliks.logit.ConfigFrame;
 import ru.absaliks.logit.common.DateUtils;
 import ru.absaliks.logit.model.ArchiveEntry;
 import ru.absaliks.logit.model.JournalEntry;
-import ru.absaliks.logit.service.OSService;
+import ru.absaliks.logit.common.OSUtils;
 import ru.absaliks.logit.service.Service;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.service.ModbusService;
@@ -50,11 +51,19 @@ public class MainFrameController {
   @FXML
   private Label readingDataStatusLabel;
   @FXML
-  private CheckBox automaticalySaveToFile;
+  private CheckBox openFileAfterSaving;
   @FXML
   private Label statusLabel;
   @FXML
   private ListView<String> listView;
+  @FXML
+  private Button readServicePageButton;
+  @FXML
+  private Button readJournalButton;
+  @FXML
+  private Button readArchiveButton;
+  @FXML
+  private Button cancel;
 
   public MainFrameController(Service service, ModbusService modbusService, Stage stage) {
     this.service = service;
@@ -78,10 +87,19 @@ public class MainFrameController {
         saveArchive(newValue));
     service.journalInProcessProperty().addListener((observable, oldValue, newValue) ->
         setProgressIndicatorVisibility(newValue));
+    progressBar.progressProperty().bind(service.getProgressProperty());
+
+    openFileAfterSaving.selectedProperty().setValue(Config.getInstance().openFileAfterSaving);
+    openFileAfterSaving.selectedProperty().addListener((observable, oldValue, newValue) ->
+        Config.getInstance().openFileAfterSaving = newValue);
   }
 
   private void setProgressIndicatorVisibility(Boolean newValue) {
     progressIndicator.setVisible(newValue);
+    cancel.setDisable(!newValue);
+    readServicePageButton.setDisable(newValue);
+    readJournalButton.setDisable(newValue);
+    readArchiveButton.setDisable(newValue);
   }
 
   public void checkConnection() {
@@ -122,6 +140,7 @@ public class MainFrameController {
   }
 
   public void readJournal() {
+    service.getProgressProperty().setValue(0);
     try {
       service.readJournal();
     } catch (Exception e) {
@@ -130,6 +149,7 @@ public class MainFrameController {
   }
 
   public void readArchive() {
+    service.getProgressProperty().setValue(0);
     try {
       service.readArchive();
     } catch (Exception e) {
@@ -140,6 +160,10 @@ public class MainFrameController {
   public void openConfigurationWindow() {
     ConfigFrame.open();
     updateStatusLabel();
+  }
+
+  public void cancelTask() {
+    service.cancel();
   }
 
   private void updateStatusLabel() {
@@ -161,19 +185,21 @@ public class MainFrameController {
 
   private void saveJournal(List<JournalEntry> journal) {
     Platform.runLater(() -> {
-      File file = OSService.saveInto(generateFileName("_journal"), stage);
+      File file = OSUtils.saveInto(generateFileName("_journal"), stage);
       if (file != null) {
         service.saveJournal(file, journal);
       }
+      service.getProgressProperty().setValue(0);
     });
   }
 
   private void saveArchive(List<ArchiveEntry> archive) {
     Platform.runLater(() -> {
-      File file = OSService.saveInto(generateFileName("_archive"), stage);
+      File file = OSUtils.saveInto(generateFileName("_archive"), stage);
       if (file != null) {
         service.saveArchive(file, archive);
       }
+      service.getProgressProperty().setValue(0);
     });
   }
 

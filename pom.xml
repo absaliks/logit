@@ -17,6 +17,9 @@
   <build>
     <resources>
       <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
         <directory>src/main/java/ru/absaliks/logit/view</directory>
         <includes>
           <include>*.fxml</include>

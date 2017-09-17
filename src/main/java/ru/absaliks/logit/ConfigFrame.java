@@ -7,13 +7,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import ru.absaliks.logit.common.ResourceUtils;
 
 public class ConfigFrame {
   private static final Logger LOG = Logger.getLogger(ConfigFrame.class.getName());
 
   public static void open() {
     try {
-      Parent root = new FXMLLoader().load(Utils.getInputStream("ConfigFrame.fxml"));
+      Parent root = new FXMLLoader().load(ResourceUtils.getInputStream("ConfigFrame.fxml"));
       Stage primaryStage = new Stage();
       primaryStage.setTitle("Настройки");
       primaryStage.initModality(Modality.APPLICATION_MODAL);
