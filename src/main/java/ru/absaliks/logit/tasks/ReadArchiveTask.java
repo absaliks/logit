@@ -41,7 +41,7 @@ public class ReadArchiveTask extends ReadPagesTask<ArchiveEntry> {
   }
 
   private double getPumpPowerValue(InputRegister[] registers) {
-    return ByteUtils.getFloat(registers[0].toBytes(), registers[1].toBytes());
+    return ByteUtils.getFloat(registers[0].toBytes(), registers[1].toBytes(), config.real32ByteOrder);
   }
 
   private long getTimestampValue(InputRegister[] registers) {

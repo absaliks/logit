@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.DoubleProperty;
+import org.apache.commons.lang3.ArrayUtils;
 import ru.absaliks.logit.config.Config;
 
 public abstract class ReadPagesTask<T> implements Callable<List<T>> {
@@ -104,13 +105,21 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
   }
 
   private void logRegisters(InputRegister[] registers) {
-    if (LOG.isLoggable(Level.CONFIG)) {
+    if (ArrayUtils.isNotEmpty(registers) && LOG.isLoggable(Level.CONFIG)) {
       byte[] bytes = new byte[registers.length * 2];
-      for (int i = 0; i < registers.length; i++)
-      {
+      for (int i = 0; i < registers.length; i++) {
         System.arraycopy(registers[i].toBytes(), 0, bytes, i * 2, 2);
       }
-      LOG.config("Have read registers: " + Arrays.toString(bytes));
+
+      StringBuilder builder = new StringBuilder("Have read registers: [");
+      for (int i = 0; i < bytes.length;) {
+        builder.append(Integer.toHexString(Byte.toUnsignedInt(bytes[i])));
+        if (++i != bytes.length)
+          builder.append(", ");
+      }
+      builder.append("] > ");
+      builder.append(Arrays.toString(bytes));
+      LOG.config(builder.toString());
     }
   }
 

@@ -46,6 +46,10 @@ public class ConfigFrameController {
   ChoiceBox<String> csvDivisor;
   @FXML
   TextField delayBetweenRequests;
+  @FXML
+  TextField uint32ByteOrder;
+  @FXML
+  TextField real32ByteOrder;
 
   @FXML
   private void initialize() {
@@ -61,6 +65,8 @@ public class ConfigFrameController {
     initModbusTimeoutTextField(config.modbus);
     initCsvDivisorChoiseBox(config);
     initDelayBetweenRequestsTextField(config.modbus);
+    initUint32ByteOrderControl(config);
+    initReal32ByteOrderControl(config);
   }
 
   private void initModbusInterfaceComboBox(Config config) {
@@ -165,6 +171,30 @@ public class ConfigFrameController {
         } catch (IllegalArgumentException e1) {
           setIntValueToTextField(delayBetweenRequests, modbusConfig.delayBetweenRequests);
         }
+      }
+    });
+  }
+
+  private void initUint32ByteOrderControl(Config config) {
+    uint32ByteOrder.setText(config.uint32ByteOrder.toStringValue());
+    uint32ByteOrder.textProperty().addListener((observable, oldValue, newValue) -> {
+      try {
+        config.uint32ByteOrder.fromStringValue(newValue);
+        uint32ByteOrder.setStyle(null);
+      } catch (Exception e) {
+        uint32ByteOrder.setStyle("-fx-background-color: red");
+      }
+    });
+  }
+
+  private void initReal32ByteOrderControl(Config config) {
+    real32ByteOrder.setText(config.real32ByteOrder.toStringValue());
+    real32ByteOrder.textProperty().addListener((observable, oldValue, newValue) -> {
+      try {
+        config.real32ByteOrder.fromStringValue(newValue);
+        real32ByteOrder.setStyle(null);
+      } catch (Exception e) {
+        real32ByteOrder.setStyle("-fx-background-color: red");
       }
     });
   }
