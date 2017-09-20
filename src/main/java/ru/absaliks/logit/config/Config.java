@@ -21,6 +21,7 @@ public class Config {
   public ModbusConfiguration modbus = new ModbusConfiguration();
   public SerialPortConfiguration serial = new SerialPortConfiguration();
   public TCPConfiguration tcp = new TCPConfiguration();
+  public DeviceConfiguration deviceConfiguration;
   public String csvDivisor;
   public ByteOrder32bit real32ByteOrder = new ByteOrder32bit(new int[]{2, 3, 0, 1});
   public ByteOrder32bit uint32ByteOrder = new ByteOrder32bit(new int[]{2, 3, 0, 1});

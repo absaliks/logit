@@ -50,6 +50,7 @@ public class ConfigFrameController {
   TextField uint32ByteOrder;
   @FXML
   TextField real32ByteOrder;
+  // @FXML TreeTableColumn<> operationTableColumn;
 
   @FXML
   private void initialize() {
