@@ -8,14 +8,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.beans.property.DoubleProperty;
+import lombok.ToString;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ArrayUtils;
 import ru.absaliks.logit.config.Config;
 
+@Log4j2
+@ToString(exclude = {"modbusMaster"})
 public abstract class ReadPagesTask<T> implements Callable<List<T>> {
-  private static final Logger LOG = Logger.getLogger(ReadPagesTask.class.getName());
 
   public static final int PAGE_READY_REF = 10;
   public static final int WAIT_FOR_PAGE_TIMEOUT = 3000;
@@ -43,7 +44,7 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
     this.delayBetweenRequests = Config.getInstance().modbus.delayBetweenRequests;
     this.progressPerPage = 1f / pagesCount;
 
-    LOG.config(this::toString);
+    log.debug(this::toString);
   }
 
   public List<T> call() throws InterruptedException, ModbusException {
@@ -55,9 +56,7 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
       pages.add(page);
 
       progress.setValue(progressPerPage * (pageId + 1));
-      if (LOG.isLoggable(Level.CONFIG)) {
-        LOG.config(String.format("Page #%d: %s", pageId, page));
-      }
+      log.debug("Page {}: {}", pageId, page);
     }
     return pages;
   }
@@ -66,21 +65,19 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
     try {
       modbusMaster.writeSingleRegister(slaveId, getCurrentPageRef(), new SimpleInputRegister(page));
     } catch (ModbusException e) {
-      LOG.log(Level.WARNING, "Unable to write page number to read", e);
+      log.warn("Unable to write page number to read", e);
       throw e;
     }
   }
 
   private void waitForPageReadiness(int slaveId) throws InterruptedException {
-    boolean timedout = false;
+    boolean timedOut = false;
     boolean isReady = false;
     long startTime = System.currentTimeMillis();
-    while (!((timedout = isTimeoutReached(startTime)) || (isReady = isPageReady(slaveId)))) {
+    while (!((timedOut = isTimeoutReached(startTime)) || (isReady = isPageReady(slaveId)))) {
       Thread.sleep(delayBetweenRequests);
     }
-    if (LOG.isLoggable(Level.CONFIG)) {
-      LOG.config("timedout=" + timedout + ", ready=" + isReady);
-    }
+    log.debug("timedOut={}, ready={}", timedOut, isReady);
   }
 
   private boolean isTimeoutReached(long startTime) {
@@ -92,7 +89,7 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
       InputRegister[] registers = modbusMaster.readInputRegisters(slaveId, PAGE_READY_REF, 1);
       return registers[0].getValue() != 0;
     } catch (ModbusException e) {
-      LOG.log(Level.INFO, "Unable to read page status", e);
+      log.warn("Unable to read page status", e);
       return false;
     }
   }
@@ -100,12 +97,12 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
   private InputRegister[] readPageData() throws ModbusException {
     InputRegister[] registers = modbusMaster
         .readInputRegisters(slaveId, getPageRef(), getPageLength());
-    logRegisters(registers);
+    log.debug(() -> logRegisters(registers));
     return registers;
   }
 
-  private void logRegisters(InputRegister[] registers) {
-    if (ArrayUtils.isNotEmpty(registers) && LOG.isLoggable(Level.CONFIG)) {
+  private String logRegisters(InputRegister[] registers) {
+    if (ArrayUtils.isNotEmpty(registers)) {
       byte[] bytes = new byte[registers.length * 2];
       for (int i = 0; i < registers.length; i++) {
         System.arraycopy(registers[i].toBytes(), 0, bytes, i * 2, 2);
@@ -119,8 +116,9 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
       }
       builder.append("] > ");
       builder.append(Arrays.toString(bytes));
-      LOG.config(builder.toString());
-    }
+      return builder.toString();
+    } else
+      return "Have just read no registers!";
   }
 
   protected abstract int getCurrentPageRef();
@@ -130,17 +128,4 @@ public abstract class ReadPagesTask<T> implements Callable<List<T>> {
   protected abstract int getPageLength();
 
   protected abstract T createPage(InputRegister[] registers);
-
-  @Override
-  public String toString() {
-    return this.getClass().getSimpleName() +
-        "{slaveId=" + slaveId +
-        ", pagesCount=" + pagesCount +
-        ", pages=" + pages +
-        ", currentPageRef=" + getCurrentPageRef() +
-        ", pageRef=" + getPageRef() +
-        ", pageLength=" + getPageLength() +
-        ", delayBetweenRequests=" + delayBetweenRequests +
-        '}';
-  }
 }

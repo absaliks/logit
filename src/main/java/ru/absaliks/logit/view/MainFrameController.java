@@ -6,8 +6,6 @@ import static ru.absaliks.logit.view.ViewUtils.showInfo;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -18,23 +16,23 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.stage.Stage;
+import lombok.extern.log4j.Log4j2;
 import ru.absaliks.logit.ConfigFrame;
 import ru.absaliks.logit.common.DateUtils;
+import ru.absaliks.logit.common.OSUtils;
+import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
 import ru.absaliks.logit.model.JournalEntry;
-import ru.absaliks.logit.common.OSUtils;
-import ru.absaliks.logit.service.Service;
-import ru.absaliks.logit.config.Config;
-import ru.absaliks.logit.service.ModbusService;
 import ru.absaliks.logit.model.ServicePage;
+import ru.absaliks.logit.service.ModbusService;
+import ru.absaliks.logit.service.Service;
 
+@Log4j2
 public class MainFrameController {
 
-  private static final Logger LOG = Logger.getLogger(MainFrameController.class.getName());
   private final Service service;
   private final ModbusService modbusService;
   private final Stage stage;
-  // private final MainFrameModel model;
 
   @FXML
   private ProgressIndicator servicePageProgressIndicator;
@@ -77,7 +75,7 @@ public class MainFrameController {
     try {
       updateStatusLabel();
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "Frame initialization error", e);
+      log.warn("Frame initialization error", e);
     }
     service.getServicePageProperty().addListener((observable, oldValue, newValue) ->
         populateListView(newValue));
@@ -107,8 +105,8 @@ public class MainFrameController {
       modbusService.checkConnection();
       showInfo("Соединение успешно установлено");
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Couldn't open a connection. " + Config.getInstance(), e);
-      showError(e.getMessage());
+      log.error("Couldn't open a connection. " + Config.getInstance(), e);
+      showError("Не удалось установить соединение: " + e.getMessage());
     }
   }
 
@@ -116,7 +114,7 @@ public class MainFrameController {
     try {
       service.readServicePage();
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Unable to read the service page. " + Config.getInstance(), e);
+      log.error("Unable to read the service page. " + Config.getInstance(), e);
       showError("Не удалось прочесть сервисную страницу: " + e.getMessage());
     }
   }
@@ -144,7 +142,7 @@ public class MainFrameController {
     try {
       service.readJournal();
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Не удалось прочесть журнал", e);
+      log.error("Не удалось прочесть журнал", e);
     }
   }
 
@@ -153,7 +151,7 @@ public class MainFrameController {
     try {
       service.readArchive();
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Не удалось прочесть архив", e);
+      log.error("Не удалось прочесть архив", e);
     }
   }
 

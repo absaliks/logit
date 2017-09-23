@@ -3,14 +3,12 @@ package ru.absaliks.logit.service;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
-import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
 import com.ghgande.j2mod.modbus.net.SerialConnection;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.beans.property.DoubleProperty;
+import lombok.extern.log4j.Log4j2;
 import ru.absaliks.logit.ModbusMasterBuilder;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
@@ -20,9 +18,8 @@ import ru.absaliks.logit.tasks.ReadArchiveTask;
 import ru.absaliks.logit.tasks.ReadJournalTask;
 import ru.absaliks.logit.tasks.ReadServicePageTask;
 
+@Log4j2
 public class ModbusService {
-
-  private static final Logger LOG = Logger.getLogger(ModbusService.class.getName());
 
   private static ModbusService instance;
   private ServicePage servicePage;
@@ -53,7 +50,7 @@ public class ModbusService {
   }
 
   public ServicePage readServicePage() throws Exception {
-    LOG.info("Reading service page");
+    log.info("Reading service page");
     AbstractModbusMaster master = null;
     try {
       master = getConnection();
@@ -65,13 +62,13 @@ public class ModbusService {
   }
 
   private void disconnect(AbstractModbusMaster master) {
-    LOG.log(Level.INFO, "Closing connection");
+    log.info("Closing connection");
     if (master != null)
       master.disconnect();
   }
 
   public List<JournalEntry> readJournal(DoubleProperty progress) throws Exception {
-    LOG.info("Reading journal...");
+    log.info("Reading journal...");
     checkServicePage();
     AbstractModbusMaster master = null;
     try {
@@ -85,7 +82,7 @@ public class ModbusService {
 
   private void checkServicePage() throws Exception {
     if (isNull(servicePage)) {
-      LOG.info("Service page is null, going to read it first");
+      log.info("Service page is null, going to read it first");
       readServicePage();
     }
   }
@@ -108,7 +105,7 @@ public class ModbusService {
   }
 
   private AbstractModbusMaster getConnection() throws Exception {
-    LOG.config("Opening connection");
+    log.debug("Opening connection");
     AbstractModbusMaster master = ModbusMasterBuilder.createMaster();
     master.connect();
     return master;

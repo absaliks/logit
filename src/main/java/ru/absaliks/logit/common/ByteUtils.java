@@ -1,12 +1,9 @@
 package ru.absaliks.logit.common;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
 import ru.absaliks.logit.config.ByteOrder32bit;
 
 public class ByteUtils {
-
-  private static final Logger LOG = Logger.getLogger(ByteUtils.class.getName());
 
   public static long getUInt32(byte[] bytes0, byte[] bytes1, ByteOrder32bit byteOrder) {
     return getUInt32(new byte[]{bytes0[0], bytes0[1], bytes1[0], bytes1[1]}, byteOrder);

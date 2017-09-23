@@ -3,8 +3,6 @@ package ru.absaliks.logit.tasks;
 import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import org.apache.commons.lang3.ArrayUtils;
 import ru.absaliks.logit.common.ByteUtils;
 import ru.absaliks.logit.model.ArchiveEntry;
 
@@ -34,10 +32,7 @@ public class ReadArchiveTask extends ReadPagesTask<ArchiveEntry> {
 
   @Override
   protected ArchiveEntry createPage(InputRegister[] registers) {
-    ArchiveEntry entry = new ArchiveEntry();
-    entry.setPumpPower(getPumpPowerValue(registers));
-    entry.setTimestamp(getTimestampValue(registers));
-    return entry;
+    return new ArchiveEntry(getPumpPowerValue(registers), getTimestampValue(registers));
   }
 
   private double getPumpPowerValue(InputRegister[] registers) {

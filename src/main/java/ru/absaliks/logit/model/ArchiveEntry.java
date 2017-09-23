@@ -1,30 +1,13 @@
 package ru.absaliks.logit.model;
 
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
+@ToString
+@EqualsAndHashCode
+@RequiredArgsConstructor
 public class ArchiveEntry {
-  private double pumpPower;
-  private long timestamp;
-
-  public double getPumpPower() {
-    return pumpPower;
-  }
-
-  public void setPumpPower(double pumpPower) {
-    this.pumpPower = pumpPower;
-  }
-
-  public long getTimestamp() {
-    return timestamp;
-  }
-
-  public void setTimestamp(long timestamp) {
-    this.timestamp = timestamp;
-  }
-
-  @Override
-  public String toString() {
-    return "ArchiveEntry{" +
-        "pumpPower=" + pumpPower +
-        ", timestamp=" + timestamp +
-        '}';
-  }
+  public final double pumpPower;
+  public final long timestamp;
 }

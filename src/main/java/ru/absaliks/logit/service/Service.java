@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -17,6 +15,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import lombok.extern.log4j.Log4j2;
 import ru.absaliks.logit.common.OSUtils;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
@@ -25,9 +24,8 @@ import ru.absaliks.logit.model.ServicePage;
 import ru.absaliks.logit.tasks.SaveArchiveToCSV;
 import ru.absaliks.logit.tasks.SaveJournalToCSV;
 
+@Log4j2
 public class Service {
-
-  private static final Logger LOG = Logger.getLogger(Service.class.getName());
 
   private ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -160,7 +158,7 @@ public class Service {
 
   public void cancel() {
     if (future != null) {
-      LOG.info("Cancelling a task");
+      log.info("Cancelling a task");
       future.cancel(true);
     }
   }
@@ -172,14 +170,14 @@ public class Service {
 
   private void openFile(File file) throws IOException {
     if (Config.getInstance().openFileAfterSaving) {
-      LOG.config("Opening a file " + file.getAbsolutePath());
+      log.debug("Opening a file " + file.getAbsolutePath());
       OSUtils.openFile(file);
     }
   }
 
   private void handleException(Throwable throwable) {
     future = null;
-    LOG.log(Level.SEVERE, throwable.getMessage(), throwable);
+    log.error(throwable);
     journalInProcessProperty.setValue(false);
     progress.setValue(0);
     Platform.runLater(() -> showError(throwable.getMessage()));

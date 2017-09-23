@@ -17,8 +17,8 @@ public class SaveArchiveToCSV extends SaveToCSV<ArchiveEntry> {
 
   @Override
   protected void write(Writer writer, ArchiveEntry entry) throws IOException {
-    writer.write(parseDateTime(of80Year(entry.getTimestamp())));
+    writer.write(parseDateTime(of80Year(entry.timestamp)));
     writer.write(getDivisor());
-    writer.write(String.format ("%.4f", entry.getPumpPower()));
+    writer.write(String.format ("%.4f", entry.pumpPower));
   }
 }
