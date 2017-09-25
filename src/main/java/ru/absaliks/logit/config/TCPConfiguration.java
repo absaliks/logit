@@ -14,10 +14,10 @@ public class TCPConfiguration {
 
   public void validate() {
     if (isNull(address) || address.isEmpty()) {
-      throw new RuntimeException("Не указан адрес для подключения");
+      throw new IllegalStateException("Не указан адрес для подключения");
     }
     if (port == 0) {
-      throw new RuntimeException("Не указан порт для подключения");
+      throw new IllegalStateException("Не указан порт для подключения");
     }
   }
 }

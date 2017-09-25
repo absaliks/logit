@@ -13,7 +13,18 @@ public class ConfigBuilder {
   private static final String DEFAULT_CONFIG_PATH = System.getProperty("user.dir") + "\\config.xml";
 
   public static void toXml() {
-    toXml(new File(DEFAULT_CONFIG_PATH));
+    if (isConfigChanged()) {
+      log.info("Configuration has changed, saving...");
+      toXml(new File(DEFAULT_CONFIG_PATH));
+    }
+  }
+
+  private static boolean isConfigChanged() {
+    try {
+      return !Config.getInstance().equals(fromFile(true));
+    } catch (Exception e) {
+      return true;
+    }
   }
 
   private static void toXml(File file) {
@@ -34,17 +45,19 @@ public class ConfigBuilder {
     }
   }
 
-  public static Config fromFile() throws FileNotFoundException, JAXBException {
-    return fromFile(new File(DEFAULT_CONFIG_PATH));
+  public static Config fromFile(boolean quiet) throws FileNotFoundException, JAXBException {
+    return fromFile(new File(DEFAULT_CONFIG_PATH), quiet);
   }
 
-  private static Config fromFile(File file) throws FileNotFoundException, JAXBException {
-    if (!file.exists()) {
-      throw new FileNotFoundException(file.getAbsolutePath());
-    }
-
-    JAXBContext context = JAXBContext.newInstance(Config.class);
-    Unmarshaller unmarshaller = context.createUnmarshaller();
-    return (Config) unmarshaller.unmarshal(file);
+  private static Config fromFile(File file, boolean quiet) throws FileNotFoundException, JAXBException {
+    if (file.exists()) {
+      JAXBContext context = JAXBContext.newInstance(Config.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      return (Config) unmarshaller.unmarshal(file);
+    } else
+      if (quiet) {
+        return null;
+      } else
+        throw new FileNotFoundException(file.getAbsolutePath());
   }
 }

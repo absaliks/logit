@@ -33,7 +33,7 @@ public class ByteOrder32bit {
   @XmlAttribute
   public void setValue(int[] value) {
     if (!validate(value)) {
-      log.warn("Попытка установить некорректный порядок байтов: {}", Arrays.toString(value));
+      log.warn("Попытка установить некорректный порядок байтов: {}", () -> Arrays.toString(value));
       throw new IllegalArgumentException();
     }
     this.value = value;
@@ -43,7 +43,7 @@ public class ByteOrder32bit {
     return value[pos];
   }
 
-  public boolean validate(int[] byteOrder) {
+  private boolean validate(int[] byteOrder) {
     boolean isValid = isNotEmpty(byteOrder) && byteOrder.length == LENGTH;
     for (int i = 0; isValid && i < LENGTH; i++) {
       isValid = isValid && indexOf(byteOrder, i) != -1;

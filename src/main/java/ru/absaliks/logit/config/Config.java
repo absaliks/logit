@@ -3,16 +3,15 @@ package ru.absaliks.logit.config;
 import static java.util.Objects.isNull;
 
 import java.io.FileNotFoundException;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 
-@Log
-@EqualsAndHashCode
+@Log4j2
 @ToString
+@EqualsAndHashCode
 @XmlRootElement
 public class Config {
   private static Config instance;
@@ -28,11 +27,11 @@ public class Config {
 
   public static void init() {
     try {
-      instance = ConfigBuilder.fromFile();
+      instance = ConfigBuilder.fromFile(false);
     } catch (FileNotFoundException e) {
-      log.log(Level.WARNING, "Не найден конфигурационный файл [" + e.getMessage() + "]", e);
+      log.warn("Не найден конфигурационный файл " + e.getMessage(), e);
     } catch (JAXBException e) {
-      log.log(Level.WARNING, "Ошибка чтения конфигурационного файла: " + e.getMessage(), e);
+      log.warn("Ошибка чтения конфигурационного файла: " + e.getMessage(), e);
       throw new RuntimeException(e);
     }
     if (isNull(instance)) {
@@ -42,9 +41,5 @@ public class Config {
 
   public static Config getInstance() {
     return instance;
-  }
-
-  public SerialPortConfiguration getSerial() {
-    return serial;
   }
 }

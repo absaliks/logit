@@ -38,7 +38,7 @@ public class ModbusMasterBuilder {
   }
 
   private static SerialParameters getSerialParameters() {
-    SerialPortConfiguration serial = Config.getInstance().getSerial();
+    SerialPortConfiguration serial = Config.getInstance().serial;
     serial.validate();
 
     SerialParameters params = new SerialParameters();
