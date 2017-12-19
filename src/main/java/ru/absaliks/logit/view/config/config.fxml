@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+
+<TabPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <tabs>
+      <Tab closable="false" text="Соединение">
+         <fx:include source="../connectionsettings/connectionSettings.fxml"/>
+      </Tab>
+      <Tab closable="false" text="Переменные устройства">
+        <fx:include source="../devicevariables/deviceVariables.fxml" />
+      </Tab>
+   </tabs>
+</TabPane>

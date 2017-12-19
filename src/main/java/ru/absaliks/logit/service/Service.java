@@ -15,8 +15,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javax.inject.Inject;
 import lombok.extern.log4j.Log4j2;
-import ru.absaliks.logit.common.OSUtils;
+import ru.absaliks.logit.utils.OSUtils;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
 import ru.absaliks.logit.model.JournalEntry;
@@ -29,8 +30,6 @@ public class Service {
 
   private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-  private final ModbusService modbusService;
-
   private ObjectProperty<ServicePage> servicePageProperty;
   private ObjectProperty<List<JournalEntry>> journalProperty;
   private ObjectProperty<List<ArchiveEntry>> archiveProperty;
@@ -39,8 +38,13 @@ public class Service {
   private DoubleProperty progress = new SimpleDoubleProperty();
   private Future<?> future;
 
-  public Service(ModbusService modbusService) {
-    this.modbusService = modbusService;
+  @Inject
+  private Config config;
+
+  @Inject
+  private ModbusService modbusService;
+
+  public Service() {
     servicePageProperty = new SimpleObjectProperty<>();
     journalProperty = new SimpleObjectProperty<>();
     archiveProperty = new SimpleObjectProperty<>();
@@ -169,7 +173,7 @@ public class Service {
   }
 
   private void openFile(File file) throws IOException {
-    if (Config.getInstance().openFileAfterSaving) {
+    if (config.openFileAfterSaving) {
       log.debug("Opening a file " + file.getAbsolutePath());
       OSUtils.openFile(file);
     }

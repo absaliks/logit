@@ -8,8 +8,8 @@ import com.ghgande.j2mod.modbus.facade.ModbusSerialMaster;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import ru.absaliks.logit.config.Config;
-import ru.absaliks.logit.config.SerialPortConfiguration;
-import ru.absaliks.logit.config.TCPConfiguration;
+import ru.absaliks.logit.config.SerialPortSettings;
+import ru.absaliks.logit.config.TCPSettings;
 
 public class ModbusMasterBuilder {
 
@@ -26,7 +26,7 @@ public class ModbusMasterBuilder {
 
   private static ModbusTCPMaster createTCPMaster() {
     Config config = Config.getInstance();
-    TCPConfiguration tcp = config.tcp;
+    TCPSettings tcp = config.tcp;
     tcp.validate();
     int timeout = nonNull(config.modbus) && nonNull(config.modbus.timeout) ?
         config.modbus.timeout : Modbus.DEFAULT_TIMEOUT;
@@ -38,7 +38,7 @@ public class ModbusMasterBuilder {
   }
 
   private static SerialParameters getSerialParameters() {
-    SerialPortConfiguration serial = Config.getInstance().serial;
+    SerialPortSettings serial = Config.getInstance().serial;
     serial.validate();
 
     SerialParameters params = new SerialParameters();

@@ -1,4 +1,4 @@
-package ru.absaliks.logit.view;
+package ru.absaliks.logit.view.connectionsettings;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -9,19 +9,21 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javax.inject.Inject;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.config.ModbusConfiguration;
 import ru.absaliks.logit.config.ModbusInterface;
 import ru.absaliks.logit.config.SerialParity;
-import ru.absaliks.logit.config.SerialPortConfiguration;
-import ru.absaliks.logit.config.TCPConfiguration;
+import ru.absaliks.logit.config.SerialPortSettings;
+import ru.absaliks.logit.config.TCPSettings;
 import ru.absaliks.logit.service.ModbusService;
 
-public class ConfigFrameController {
+public class ConnectionSettingsPresenter {
 
   ObservableList<SerialParity> parityList = observableArrayList(SerialParity.values());
-  ObservableList<String> stopBitList = observableArrayList(SerialPortConfiguration.VALID_STOP_BITS);
+  ObservableList<String> stopBitList = observableArrayList(SerialPortSettings.VALID_STOP_BITS);
   ObservableList<String> csvDivisorList = observableArrayList(";", "tab");
 
   @FXML
@@ -50,33 +52,41 @@ public class ConfigFrameController {
   TextField uint32ByteOrder;
   @FXML
   TextField real32ByteOrder;
-  // @FXML TreeTableColumn<> operationTableColumn;
+  @FXML
+  TableColumn deviceVariableName;
+  @FXML
+  TableColumn deviceVariableAddress;
+  @FXML
+  TableColumn deviceVariableErrorMessage;
+
+  @Inject
+  Config config;
 
   @FXML
   private void initialize() {
-    Config config = Config.getInstance();
-    initModbusInterfaceComboBox(config);
-    initComPortComboBox(config.serial);
-    initComBaudRateChoiceBox(config.serial);
-    initComParityChoiceBox(config.serial);
-    initComStopBitsChoiceBox(config.serial);
-    initTcpAddressTextField(config.tcp);
-    initTcpPortTextField(config.tcp);
-    initModbusDeviceIdTextField(config.modbus);
-    initModbusTimeoutTextField(config.modbus);
-    initCsvDivisorChoiseBox(config);
-    initDelayBetweenRequestsTextField(config.modbus);
-    initUint32ByteOrderControl(config);
-    initReal32ByteOrderControl(config);
+    initModbusInterfaceComboBox();
+    initComPortComboBox();
+    initComBaudRateChoiceBox();
+    initComParityChoiceBox();
+    initComStopBitsChoiceBox();
+    initTcpAddressTextField();
+    initTcpPortTextField();
+    initModbusDeviceIdTextField();
+    initModbusTimeoutTextField();
+    initCsvDivisorChoiseBox();
+    initDelayBetweenRequestsTextField();
+    initUint32ByteOrderControl();
+    initReal32ByteOrderControl();
   }
 
-  private void initModbusInterfaceComboBox(Config config) {
+  private void initModbusInterfaceComboBox() {
     modbusInterface.getItems().addAll(ModbusInterface.values());
     modbusInterface.setValue(config.currentInterface);
     modbusInterface.setOnAction(e -> config.currentInterface = modbusInterface.getValue());
   }
 
-  private void initComPortComboBox(SerialPortConfiguration serialConfig) {
+  private void initComPortComboBox() {
+    SerialPortSettings serialConfig = config.serial;
     Set<String> comPorts = ModbusService.getInstance().getRegisteredCOMPorts();
     comPort.getItems().addAll(comPorts);
     if (nonNull(serialConfig.portName) && comPorts.contains(serialConfig.portName)) {
@@ -85,30 +95,35 @@ public class ConfigFrameController {
     comPort.setOnAction(e -> serialConfig.portName = comPort.getValue());
   }
 
-  private void initComBaudRateChoiceBox(SerialPortConfiguration serialConfig) {
-    comBaudRate.getItems().addAll(SerialPortConfiguration.VALID_BAUD_RATE);
+  private void initComBaudRateChoiceBox() {
+    SerialPortSettings serialConfig = config.serial;
+    comBaudRate.getItems().addAll(SerialPortSettings.VALID_BAUD_RATE);
     comBaudRate.setValue(serialConfig.baudRate);
     comBaudRate.setOnAction(e -> serialConfig.baudRate = comBaudRate.getValue());
   }
 
-  private void initComParityChoiceBox(SerialPortConfiguration serialConfig) {
+  private void initComParityChoiceBox() {
+    SerialPortSettings serialConfig = config.serial;
     comParity.setItems(parityList);
     comParity.setValue(serialConfig.parity);
     comParity.setOnAction(e -> serialConfig.parity = comParity.getValue());
   }
 
-  private void initComStopBitsChoiceBox(SerialPortConfiguration serialConfig) {
+  private void initComStopBitsChoiceBox() {
+    SerialPortSettings serialConfig = config.serial;
     comStopBits.setItems(stopBitList);
     comStopBits.setValue(serialConfig.stopBits);
     comStopBits.setOnAction(e -> serialConfig.stopBits = comStopBits.getValue());
   }
 
-  private void initTcpAddressTextField(TCPConfiguration tcpConfig) {
+  private void initTcpAddressTextField() {
+    TCPSettings tcpConfig = config.tcp;
     tcpAddress.setText(tcpConfig.address);
     tcpAddress.textProperty().addListener(e -> tcpConfig.address = tcpAddress.getText());
   }
 
-  private void initTcpPortTextField(TCPConfiguration tcpConfig) {
+  private void initTcpPortTextField() {
+    TCPSettings tcpConfig = config.tcp;
     setIntValueToTextField(tcpPort, tcpConfig.port);
     tcpPort.textProperty().addListener((observable, oldValue, newValue) -> {
       if ("".equals(newValue)) {
@@ -131,7 +146,8 @@ public class ConfigFrameController {
     textField.setText(isNull(intValue) ? "" : intValue.toString());
   }
 
-  private void initModbusDeviceIdTextField(ModbusConfiguration modbusConfig) {
+  private void initModbusDeviceIdTextField() {
+    ModbusConfiguration modbusConfig = config.modbus;
     setIntValueToTextField(modbusDeviceId, modbusConfig.deviceId);
     modbusDeviceId.textProperty().addListener((observable, oldValue, newValue) -> {
       if ("".equals(newValue)) {
@@ -146,7 +162,8 @@ public class ConfigFrameController {
     });
   }
 
-  private void initModbusTimeoutTextField(ModbusConfiguration modbusConfig) {
+  private void initModbusTimeoutTextField() {
+    ModbusConfiguration modbusConfig = config.modbus;
     setIntValueToTextField(modbusTimeout, modbusConfig.timeout);
     modbusTimeout.textProperty().addListener((observable, oldValue, newValue) -> {
       if ("".equals(newValue)) {
@@ -161,7 +178,8 @@ public class ConfigFrameController {
     });
   }
 
-  private void initDelayBetweenRequestsTextField(ModbusConfiguration modbusConfig) {
+  private void initDelayBetweenRequestsTextField() {
+    ModbusConfiguration modbusConfig = config.modbus;
     setIntValueToTextField(delayBetweenRequests, modbusConfig.delayBetweenRequests);
     delayBetweenRequests.textProperty().addListener((observable, oldValue, newValue) -> {
       if ("".equals(newValue)) {
@@ -176,7 +194,7 @@ public class ConfigFrameController {
     });
   }
 
-  private void initUint32ByteOrderControl(Config config) {
+  private void initUint32ByteOrderControl() {
     uint32ByteOrder.setText(config.uint32ByteOrder.toStringValue());
     uint32ByteOrder.textProperty().addListener((observable, oldValue, newValue) -> {
       try {
@@ -188,7 +206,7 @@ public class ConfigFrameController {
     });
   }
 
-  private void initReal32ByteOrderControl(Config config) {
+  private void initReal32ByteOrderControl() {
     real32ByteOrder.setText(config.real32ByteOrder.toStringValue());
     real32ByteOrder.textProperty().addListener((observable, oldValue, newValue) -> {
       try {
@@ -200,7 +218,7 @@ public class ConfigFrameController {
     });
   }
 
-  private void initCsvDivisorChoiseBox(Config config) {
+  private void initCsvDivisorChoiseBox() {
     csvDivisor.getItems().addAll(csvDivisorList);
     csvDivisor.setValue(config.csvDivisor);
     csvDivisor.setOnAction(e -> config.csvDivisor = csvDivisor.getValue());

@@ -1,21 +1,21 @@
 package ru.absaliks.logit.tasks;
 
-import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
-import javafx.beans.property.DoubleProperty;
-import ru.absaliks.logit.common.ByteUtils;
+import lombok.Data;
+import lombok.ToString;
+import ru.absaliks.logit.utils.ByteUtils;
+import ru.absaliks.logit.config.ByteOrder32bit;
 import ru.absaliks.logit.model.JournalEntry;
 
+@Data
+@ToString(callSuper = true)
 public class ReadJournalTask extends ReadPagesTask<JournalEntry> {
 
   private static final int CURRENT_PAGE_REF = 8;
   public static final int PAGE_REF = 16;
   public static final int PAGE_LENGTH = 3;
 
-  public ReadJournalTask(AbstractModbusMaster master, int slaveId, int pagesCount,
-      DoubleProperty progress) {
-    super(master, slaveId, pagesCount, progress);
-  }
+  private ByteOrder32bit uint32ByteOrder;
 
   @Override
   protected int getCurrentPageRef() {
@@ -42,7 +42,6 @@ public class ReadJournalTask extends ReadPagesTask<JournalEntry> {
   }
 
   private long getTimestampValue(InputRegister[] registers) {
-    return ByteUtils
-        .getUInt32(registers[1].toBytes(), registers[2].toBytes(), config.uint32ByteOrder);
+    return ByteUtils.getUInt32(registers[1].toBytes(), registers[2].toBytes(), uint32ByteOrder);
   }
 }

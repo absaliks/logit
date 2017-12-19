@@ -8,10 +8,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import ru.absaliks.logit.common.ResourceUtils;
+import ru.absaliks.logit.utils.ResourceUtils;
 import ru.absaliks.logit.service.ModbusService;
 import ru.absaliks.logit.service.Service;
-import ru.absaliks.logit.view.MainFrameController;
+import ru.absaliks.logit.view.main.MainPresenter;
 
 public class MainFrame extends Application {
   @Override
@@ -21,14 +21,13 @@ public class MainFrame extends Application {
   }
   
   private void initStage(Stage primaryStage) {
-    // final MainFrameModel model = new MainFrameModel();
     final ModbusService modbusService = ModbusService.getInstance();
     final Service service = new Service(modbusService);
 
     FXMLLoader loader = new FXMLLoader();
     try {
-      loader.setControllerFactory((c) -> new MainFrameController(service, modbusService, primaryStage));
-      Parent root = loader.load(ResourceUtils.getInputStream("MainFrame.fxml"));
+      loader.setControllerFactory((c) -> new MainPresenter(service, modbusService, primaryStage));
+      Parent root = loader.load(ResourceUtils.getInputStream("main.fxml"));
       primaryStage.setTitle("Logit");
       primaryStage.setScene(new Scene(root));
       setFrameIcon(primaryStage);

@@ -1,7 +1,7 @@
 package ru.absaliks.logit.tasks;
 
-import static ru.absaliks.logit.common.DateUtils.of80Year;
-import static ru.absaliks.logit.common.DateUtils.parseDateTime;
+import static ru.absaliks.logit.utils.DateUtils.of80Year;
+import static ru.absaliks.logit.utils.DateUtils.parseDateTime;
 
 import java.io.File;
 import java.io.IOException;

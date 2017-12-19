@@ -9,7 +9,7 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-public class SerialPortConfiguration {
+public class SerialPortSettings {
   public static final List<String> VALID_STOP_BITS = Arrays.asList("1", "1.5", "2");
   public static final List<Integer> VALID_BAUD_RATE = Arrays.asList(300, 600, 1200, 2400, 4800,
       9600, 14400, 19200, 38400, 56000, 57600, 115200, 128000, 256000);

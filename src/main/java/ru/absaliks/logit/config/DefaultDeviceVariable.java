@@ -1,11 +1,15 @@
 package ru.absaliks.logit.config;
 
-import static ru.absaliks.logit.config.DataType.*;
+import static ru.absaliks.logit.config.DataType.REAL32;
+import static ru.absaliks.logit.config.DataType.UINT16;
+import static ru.absaliks.logit.config.DataType.UINT32;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-public enum DeviceVariables {
+@RequiredArgsConstructor
+public enum DefaultDeviceVariable {
   // Service Page Variables
   SERVICE_PAGE_MARKER("Маркет сервисной страницы", 40001, UINT16),
   CONTROLLER_MODEL("Модель контроллера", 40002, UINT16),
@@ -19,20 +23,14 @@ public enum DeviceVariables {
   PAGE_READY_REFERENCE("Маркер готовности страницы для чтения", 40010, UINT16),
 
   // Journal
-  JOURNAL_EVENT_CODE("Код события", 40016, UINT16),
-  JOURNAL_TIMESTAMP("Время в секундах, начиная с 1980 г", 40017, UINT32),
+  JOURNAL_EVENT_CODE("Журнал - Код события", 40016, UINT16),
+  JOURNAL_TIMESTAMP("Журнал - Время в секундах, начиная с 1980 г", 40017, UINT32),
 
   // Archive
-  ARCHIVE_PUMP_POWER("Подача насоса, л/ч", 40020, REAL32),
-  ARCHIVE_TIMESTAMP("Время в секундах, начиная с 1980 г", 40022, UINT32);
+  ARCHIVE_PUMP_POWER("Архив - Подача насоса, л/ч", 40020, REAL32),
+  ARCHIVE_TIMESTAMP("Архив - Время в секундах, начиная с 1980 г", 40022, UINT32);
 
-  private String label;
-  private int address;
-  private DataType dataType;
-
-  DeviceVariables(String label, int address, DataType dataType) {
-    this.label = label;
-    this.address = address;
-    this.dataType = dataType;
-  }
+  private final String label;
+  private final int defaultAddress;
+  private final DataType dataType;
 }

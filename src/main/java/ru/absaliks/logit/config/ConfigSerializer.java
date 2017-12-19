@@ -9,30 +9,18 @@ import javax.xml.bind.Unmarshaller;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class ConfigBuilder {
-  private static final String DEFAULT_CONFIG_PATH = System.getProperty("user.dir") + "\\config.xml";
+public class ConfigSerializer {
 
-  public static void toXml() {
-    if (isConfigChanged()) {
-      log.info("Configuration has changed, saving...");
-      toXml(new File(DEFAULT_CONFIG_PATH));
-    }
+  private static final String CONFIG_PATH = System.getProperty("user.dir") + "\\config.xml";
+
+  public static void toXml(Config config) {
+    toXml(config, new File(CONFIG_PATH));
   }
 
-  private static boolean isConfigChanged() {
-    try {
-      return !Config.getInstance().equals(fromFile(true));
-    } catch (Exception e) {
-      return true;
-    }
-  }
-
-  private static void toXml(File file) {
+  private static void toXml(Config config, File file) {
     if (file == null) {
       throw new IllegalArgumentException();
     }
-
-    Config config = Config.getInstance();
 
     try {
       JAXBContext jaxbContext = JAXBContext.newInstance(Config.class);
@@ -46,18 +34,19 @@ public class ConfigBuilder {
   }
 
   public static Config fromFile(boolean quiet) throws FileNotFoundException, JAXBException {
-    return fromFile(new File(DEFAULT_CONFIG_PATH), quiet);
+    return fromFile(new File(CONFIG_PATH), quiet);
   }
 
-  private static Config fromFile(File file, boolean quiet) throws FileNotFoundException, JAXBException {
+  private static Config fromFile(File file, boolean quiet)
+      throws FileNotFoundException, JAXBException {
     if (file.exists()) {
       JAXBContext context = JAXBContext.newInstance(Config.class);
       Unmarshaller unmarshaller = context.createUnmarshaller();
       return (Config) unmarshaller.unmarshal(file);
-    } else
-      if (quiet) {
-        return null;
-      } else
-        throw new FileNotFoundException(file.getAbsolutePath());
+    } else if (quiet) {
+      return null;
+    } else {
+      throw new FileNotFoundException(file.getAbsolutePath());
+    }
   }
 }

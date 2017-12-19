@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+  xmlns:fx="http://javafx.com/fxml"
+  fx:controller="ru.absaliks.logit.view.connectionsettings.ConnectionSettingsPresenter"
+  prefHeight="392.0" prefWidth="574.0">
+  <children>
+    <Label layoutX="14.0" layoutY="14.0" text="Соединение" />
+    <ChoiceBox fx:id="modbusInterface" layoutX="110.0" layoutY="10.0" prefHeight="25.0" prefWidth="93.0" />
+    <TitledPane animated="false" collapsible="false" layoutX="14.0" layoutY="41.0" prefHeight="169.0" prefWidth="272.0" text="COM">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0">
+          <children>
+            <ComboBox fx:id="comPort" layoutX="100.0" layoutY="10.0" prefHeight="25.0" prefWidth="149.0" />
+            <ChoiceBox fx:id="comBaudRate" layoutX="100.0" layoutY="40.0" prefWidth="150.0" />
+            <ChoiceBox fx:id="comParity" layoutX="100.0" layoutY="70.0" prefWidth="150.0" />
+            <ChoiceBox fx:id="comStopBits" layoutX="100.0" layoutY="100.0" prefWidth="150.0" />
+            <Label layoutX="10.0" layoutY="14.0" text="Порт" />
+            <Label layoutX="10.0" layoutY="44.0" text="Скорость, бод" />
+            <Label layoutX="10.0" layoutY="74.0" text="Четность" />
+            <Label layoutX="10.0" layoutY="104.0" text="Стоповые биты" />
+          </children>
+        </AnchorPane>
+      </content>
+    </TitledPane>
+    <TitledPane animated="false" collapsible="false" layoutX="294.0" layoutY="41.0" prefHeight="110.0" prefWidth="272.0" text="TCP">
+      <content>
+        <AnchorPane>
+          <children>
+            <Label layoutX="10.0" layoutY="14.0" text="Адрес" />
+            <TextField fx:id="tcpAddress" layoutX="136.0" layoutY="10.0" prefHeight="25.0" prefWidth="116.0" />
+            <TextField fx:id="tcpPort" layoutX="184.0" layoutY="40.0" prefHeight="25.0" prefWidth="68.0" />
+            <Label layoutX="10.0" layoutY="44.0" text="Порт" />
+          </children>
+        </AnchorPane>
+      </content>
+    </TitledPane>
+    <TitledPane animated="false" collapsible="false" layoutX="294.0" layoutY="163.0" prefHeight="138.0" prefWidth="272.0" text="Modbus">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="84.0" prefWidth="222.0">
+          <children>
+            <Label layoutX="10.0" layoutY="14.0" text="Адрес Modbus RTU" />
+            <Label layoutX="10.0" layoutY="44.0" text="Таймаут, мс" />
+            <TextField fx:id="modbusDeviceId" layoutX="157.0" layoutY="10.0" prefHeight="25.0" prefWidth="93.0" />
+            <TextField fx:id="modbusTimeout" layoutX="157.0" layoutY="40.0" prefHeight="25.0" prefWidth="93.0" />
+            <Label layoutX="10.0" layoutY="74.0" text="Пауза между опросами" />
+            <TextField fx:id="delayBetweenRequests" layoutX="157.0" layoutY="70.0" prefHeight="25.0" prefWidth="93.0" />
+          </children>
+        </AnchorPane>
+      </content>
+    </TitledPane>
+    <TitledPane animated="false" collapsible="false" layoutX="14.0" layoutY="218.0" prefHeight="138.0" prefWidth="272.0" text="Другое">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+          <children>
+            <Label layoutX="10.0" layoutY="14.0" text="Разделители столбцов в CSV" />
+            <ChoiceBox fx:id="csvDivisor" layoutX="175.0" layoutY="10.0" prefHeight="25.0" prefWidth="75.0" />
+            <Label layoutX="10.0" layoutY="44.0" text="Порядок байтов UINT32" />
+            <TextField fx:id="uint32ByteOrder" layoutX="175.0" layoutY="40.0" prefHeight="25.0" prefWidth="75.0" />
+            <TextField fx:id="real32ByteOrder" layoutX="175.0" layoutY="70.0" prefHeight="25.0" prefWidth="75.0" />
+            <Label layoutX="10.0" layoutY="74.0" text="Порядок байтов REAL32" />
+          </children>
+        </AnchorPane>
+      </content>
+    </TitledPane>
+  </children>
+</AnchorPane>

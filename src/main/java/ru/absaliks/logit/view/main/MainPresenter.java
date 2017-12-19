@@ -1,4 +1,4 @@
-package ru.absaliks.logit.view;
+package ru.absaliks.logit.view.main;
 
 import static ru.absaliks.logit.view.ViewUtils.showError;
 import static ru.absaliks.logit.view.ViewUtils.showInfo;
@@ -16,10 +16,11 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.stage.Stage;
+import javax.inject.Inject;
 import lombok.extern.log4j.Log4j2;
 import ru.absaliks.logit.ConfigFrame;
-import ru.absaliks.logit.common.DateUtils;
-import ru.absaliks.logit.common.OSUtils;
+import ru.absaliks.logit.utils.DateUtils;
+import ru.absaliks.logit.utils.OSUtils;
 import ru.absaliks.logit.config.Config;
 import ru.absaliks.logit.model.ArchiveEntry;
 import ru.absaliks.logit.model.JournalEntry;
@@ -28,10 +29,17 @@ import ru.absaliks.logit.service.ModbusService;
 import ru.absaliks.logit.service.Service;
 
 @Log4j2
-public class MainFrameController {
+public class MainPresenter {
 
+  @Inject
   private final Service service;
+  
+  @Inject
   private final ModbusService modbusService;
+  
+  @Inject
+  private Config config;
+
   private final Stage stage;
 
   @FXML
@@ -63,7 +71,7 @@ public class MainFrameController {
   @FXML
   private Button cancel;
 
-  public MainFrameController(Service service, ModbusService modbusService, Stage stage) {
+  public MainPresenter(Service service, ModbusService modbusService, Stage stage) {
     this.service = service;
     this.modbusService = modbusService;
     this.stage = stage;
@@ -87,9 +95,9 @@ public class MainFrameController {
         setProgressIndicatorVisibility(newValue));
     progressBar.progressProperty().bind(service.getProgressProperty());
 
-    openFileAfterSaving.selectedProperty().setValue(Config.getInstance().openFileAfterSaving);
+    openFileAfterSaving.selectedProperty().setValue(config.openFileAfterSaving);
     openFileAfterSaving.selectedProperty().addListener((observable, oldValue, newValue) ->
-        Config.getInstance().openFileAfterSaving = newValue);
+        config.openFileAfterSaving = newValue);
   }
 
   private void setProgressIndicatorVisibility(Boolean newValue) {
@@ -105,7 +113,7 @@ public class MainFrameController {
       modbusService.checkConnection();
       showInfo("Соединение успешно установлено");
     } catch (Exception e) {
-      log.error("Couldn't open a connection. " + Config.getInstance(), e);
+      log.error("Couldn't open a connection. " + config, e);
       showError("Не удалось установить соединение: " + e.getMessage());
     }
   }
@@ -114,7 +122,7 @@ public class MainFrameController {
     try {
       service.readServicePage();
     } catch (Exception e) {
-      log.error("Unable to read the service page. " + Config.getInstance(), e);
+      log.error("Unable to read the service page. " + config, e);
       showError("Не удалось прочесть сервисную страницу: " + e.getMessage());
     }
   }
@@ -165,7 +173,6 @@ public class MainFrameController {
   }
 
   private void updateStatusLabel() {
-    Config config = Config.getInstance();
     String statusText = null;
     try {
       switch (config.currentInterface) {
@@ -202,7 +209,7 @@ public class MainFrameController {
   }
 
   private String generateFileName(String postfix) {
-    int serialNo = modbusService.getServicePage().serialNo;
+    int serialNo = modbusService.readServicePage().serialNo;
     return serialNo + "_" + LocalDateTime.now().format(DateUtils.FILENAME_DATETIME_FORMAT) +
         postfix + ".csv";
   }

@@ -1,18 +1,27 @@
 package ru.absaliks.logit.tasks;
 
-import com.ghgande.j2mod.modbus.facade.AbstractModbusMaster;
+import static java.util.Objects.nonNull;
+
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
-import javafx.beans.property.DoubleProperty;
-import ru.absaliks.logit.common.ByteUtils;
+import lombok.Data;
+import lombok.ToString;
+import ru.absaliks.logit.utils.ByteUtils;
+import ru.absaliks.logit.config.ByteOrder32bit;
 import ru.absaliks.logit.model.ArchiveEntry;
 
+@Data
+@ToString(callSuper = true)
 public class ReadArchiveTask extends ReadPagesTask<ArchiveEntry> {
   private static final int CURRENT_PAGE_REF = 9;
-  public static final int PAGE_REF = 20;
-  public static final int PAGE_LENGTH = 4;
+  private static final int PAGE_REF = 20;
+  private static final int PAGE_LENGTH = 4;
 
-  public ReadArchiveTask(AbstractModbusMaster master, int slaveId, int pagesCount, DoubleProperty progress) {
-    super(master, slaveId, pagesCount, progress);
+  private ByteOrder32bit real32ByteOrder;
+  private ByteOrder32bit uint32ByteOrder;
+
+  @Override
+  public boolean isValid() {
+    return super.isValid() && nonNull(real32ByteOrder) && nonNull(uint32ByteOrder);
   }
 
   @Override
@@ -36,10 +45,10 @@ public class ReadArchiveTask extends ReadPagesTask<ArchiveEntry> {
   }
 
   private double getPumpPowerValue(InputRegister[] registers) {
-    return ByteUtils.getFloat(registers[0].toBytes(), registers[1].toBytes(), config.real32ByteOrder);
+    return ByteUtils.getFloat(registers[0].toBytes(), registers[1].toBytes(), real32ByteOrder);
   }
 
   private long getTimestampValue(InputRegister[] registers) {
-    return ByteUtils.getUInt32(registers[2].toBytes(), registers[3].toBytes(), config.uint32ByteOrder);
+    return ByteUtils.getUInt32(registers[2].toBytes(), registers[3].toBytes(), uint32ByteOrder);
   }
 }

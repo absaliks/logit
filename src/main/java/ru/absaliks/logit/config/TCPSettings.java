@@ -8,7 +8,7 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-public class TCPConfiguration {
+public class TCPSettings {
   public String address;
   public Integer port;
 

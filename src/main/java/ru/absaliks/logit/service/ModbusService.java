@@ -8,6 +8,7 @@ import com.ghgande.j2mod.modbus.net.SerialConnection;
 import java.util.List;
 import java.util.Set;
 import javafx.beans.property.DoubleProperty;
+import javax.inject.Inject;
 import lombok.extern.log4j.Log4j2;
 import ru.absaliks.logit.ModbusMasterBuilder;
 import ru.absaliks.logit.config.Config;
@@ -16,99 +17,105 @@ import ru.absaliks.logit.model.JournalEntry;
 import ru.absaliks.logit.model.ServicePage;
 import ru.absaliks.logit.tasks.ReadArchiveTask;
 import ru.absaliks.logit.tasks.ReadJournalTask;
+import ru.absaliks.logit.tasks.ReadPagesTask;
 import ru.absaliks.logit.tasks.ReadServicePageTask;
 
 @Log4j2
 public class ModbusService {
 
-  private static ModbusService instance;
+  @Inject
+  private Config config;
+
   private ServicePage servicePage;
 
-  private ModbusService() {
-  }
-
-  public static ModbusService getInstance() {
-    if (instance == null) {
-      instance = new ModbusService();
-    }
-    return instance;
-  }
+  private AbstractModbusMaster master;
 
   public void checkConnection() throws Exception {
-    AbstractModbusMaster master = null;
     try {
-      master = getConnection();
+      openConnection();
     } finally {
-      if (nonNull(master)) {
-        master.disconnect();
-      }
+      disconnect();
     }
   }
 
-  public ServicePage getServicePage() {
-    return servicePage;
-  }
-
-  public ServicePage readServicePage() throws Exception {
-    log.info("Reading service page");
-    AbstractModbusMaster master = null;
-    try {
-      master = getConnection();
-      this.servicePage = new ReadServicePageTask(master, getSlaveId()).call();
-      return this.servicePage;
-    } finally {
-      disconnect(master);
-    }
-  }
-
-  private void disconnect(AbstractModbusMaster master) {
-    log.info("Closing connection");
-    if (master != null)
-      master.disconnect();
-  }
-
-  public List<JournalEntry> readJournal(DoubleProperty progress) throws Exception {
-    log.info("Reading journal...");
-    checkServicePage();
-    AbstractModbusMaster master = null;
-    try {
-      master = getConnection();
-      return new ReadJournalTask(master, getSlaveId(), servicePage.journalPageCount, progress)
-          .call();
-    } finally {
-      disconnect(master);
-    }
-  }
-
-  private void checkServicePage() throws Exception {
-    if (isNull(servicePage)) {
-      log.info("Service page is null, going to read it first");
-      readServicePage();
-    }
-  }
-
-  public List<ArchiveEntry> readArchive(DoubleProperty progress)
-      throws Exception {
-    checkServicePage();
-    AbstractModbusMaster master = null;
-    try {
-      master = getConnection();
-      return new ReadArchiveTask(master, getSlaveId(), servicePage.archivePageCount, progress)
-          .call();
-    } finally {
-      disconnect(master);
-    }
-  }
-
-  private int getSlaveId() {
-    return Config.getInstance().modbus.deviceId == 0 ? 1 : Config.getInstance().modbus.deviceId;
-  }
-
-  private AbstractModbusMaster getConnection() throws Exception {
+  private void openConnection() throws Exception {
     log.debug("Opening connection");
     AbstractModbusMaster master = ModbusMasterBuilder.createMaster();
     master.connect();
-    return master;
+  }
+
+  private void disconnect() {
+    log.info("Closing connection");
+    if (nonNull(master)) {
+      master.disconnect();
+    }
+  }
+
+  public ServicePage readServicePage() throws Exception {
+    try {
+      openConnection();
+      return servicePage = getServicePage(true);
+    } finally {
+      disconnect();
+    }
+  }
+
+  private ServicePage getServicePage(boolean forceUpdate) throws Exception {
+    if (forceUpdate || isNull(servicePage)) {
+      log.info("Reading Service Page");
+      return servicePage = new ReadServicePageTask(master, getSlaveId()).call();
+    } else {
+      log.info("Returning cached Service Page");
+      return servicePage;
+    }
+  }
+
+  public List<JournalEntry> readJournal(DoubleProperty progress) throws Exception {
+    log.info("Reading Journal");
+    try {
+      openConnection();
+      return createReadJournalTask(progress).call();
+    } finally {
+      disconnect();
+    }
+  }
+
+  public List<ArchiveEntry> readArchive(DoubleProperty progress) throws Exception {
+    log.info("Reading Archive");
+    try {
+      openConnection();
+      return createReadArchiveTask(progress).call();
+    } finally {
+      disconnect();
+    }
+  }
+
+  private ReadJournalTask createReadJournalTask(DoubleProperty progress) {
+    ReadJournalTask task = new ReadJournalTask();
+    task.setPagesCount(servicePage.journalPageCount);
+    task.setUint32ByteOrder(config.uint32ByteOrder);
+    fillInReadPagesTaskProperties(task, progress);
+    return task;
+  }
+
+  private ReadArchiveTask createReadArchiveTask(DoubleProperty progress) {
+    ReadArchiveTask task = new ReadArchiveTask();
+    task.setPagesCount(servicePage.archivePageCount);
+    task.setUint32ByteOrder(config.uint32ByteOrder);
+    task.setReal32ByteOrder(config.real32ByteOrder);
+    fillInReadPagesTaskProperties(task, progress);
+    return task;
+  }
+
+  private void fillInReadPagesTaskProperties(ReadPagesTask task, DoubleProperty progress) {
+    task.setModbusMaster(master);
+    task.setSlaveId(getSlaveId());
+    task.setDelayBetweenRequests(config.modbus.delayBetweenRequests);
+    task.setProgress(progress);
+  }
+
+  private int getSlaveId() {
+    return config.modbus.deviceId == 0 ? 1 : config.modbus.deviceId;
   }
 
   public Set<String> getRegisteredCOMPorts() {

@@ -1,4 +1,4 @@
-package ru.absaliks.logit.common;
+package ru.absaliks.logit.utils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

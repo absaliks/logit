@@ -1,4 +1,4 @@
-package ru.absaliks.logit.common;
+package ru.absaliks.logit.utils;
 
 import java.awt.Desktop;
 import java.io.File;
